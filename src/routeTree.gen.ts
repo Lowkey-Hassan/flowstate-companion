@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
+import { Route as AppFocusRouteImport } from './routes/_app.focus'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -33,14 +34,21 @@ const AppTasksRoute = AppTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFocusRoute = AppFocusRouteImport.update({
+  id: '/focus',
+  path: '/focus',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
+  '/focus': typeof AppFocusRoute
   '/tasks': typeof AppTasksRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/focus': typeof AppFocusRoute
   '/tasks': typeof AppTasksRoute
   '/': typeof AppIndexRoute
 }
@@ -48,15 +56,16 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/focus': typeof AppFocusRoute
   '/_app/tasks': typeof AppTasksRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/tasks'
+  fullPaths: '/' | '/login' | '/focus' | '/tasks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/tasks' | '/'
-  id: '__root__' | '/_app' | '/login' | '/_app/tasks' | '/_app/'
+  to: '/login' | '/focus' | '/tasks' | '/'
+  id: '__root__' | '/_app' | '/login' | '/_app/focus' | '/_app/tasks' | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,15 +103,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTasksRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/focus': {
+      id: '/_app/focus'
+      path: '/focus'
+      fullPath: '/focus'
+      preLoaderRoute: typeof AppFocusRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppFocusRoute: typeof AppFocusRoute
   AppTasksRoute: typeof AppTasksRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppFocusRoute: AppFocusRoute,
   AppTasksRoute: AppTasksRoute,
   AppIndexRoute: AppIndexRoute,
 }
