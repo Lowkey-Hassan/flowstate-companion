@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
 import { Route as AppFocusRouteImport } from './routes/_app.focus'
+import { Route as AppCoachRouteImport } from './routes/_app.coach'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -39,15 +40,22 @@ const AppFocusRoute = AppFocusRouteImport.update({
   path: '/focus',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCoachRoute = AppCoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
+  '/coach': typeof AppCoachRoute
   '/focus': typeof AppFocusRoute
   '/tasks': typeof AppTasksRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/coach': typeof AppCoachRoute
   '/focus': typeof AppFocusRoute
   '/tasks': typeof AppTasksRoute
   '/': typeof AppIndexRoute
@@ -56,16 +64,24 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/coach': typeof AppCoachRoute
   '/_app/focus': typeof AppFocusRoute
   '/_app/tasks': typeof AppTasksRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/focus' | '/tasks'
+  fullPaths: '/' | '/login' | '/coach' | '/focus' | '/tasks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/focus' | '/tasks' | '/'
-  id: '__root__' | '/_app' | '/login' | '/_app/focus' | '/_app/tasks' | '/_app/'
+  to: '/login' | '/coach' | '/focus' | '/tasks' | '/'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/login'
+    | '/_app/coach'
+    | '/_app/focus'
+    | '/_app/tasks'
+    | '/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -110,16 +126,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFocusRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/coach': {
+      id: '/_app/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof AppCoachRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppCoachRoute: typeof AppCoachRoute
   AppFocusRoute: typeof AppFocusRoute
   AppTasksRoute: typeof AppTasksRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppCoachRoute: AppCoachRoute,
   AppFocusRoute: AppFocusRoute,
   AppTasksRoute: AppTasksRoute,
   AppIndexRoute: AppIndexRoute,
@@ -134,3 +159,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
