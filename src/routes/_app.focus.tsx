@@ -7,7 +7,6 @@ import { PageTitle } from "@/components/PageTitle";
 import {
   useAddFocusSession,
   useFocusSessions,
-  todayStr,
 } from "@/lib/data";
 import { useOnline } from "@/hooks/use-online";
 import { randomReward } from "@/lib/constants";
