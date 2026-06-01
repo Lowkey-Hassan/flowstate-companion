@@ -14,7 +14,284 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      coach_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          rating: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          rating: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          rating?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_logs: {
+        Row: {
+          created_at: string
+          date: string
+          focus_score: number | null
+          id: string
+          medication_taken: string | null
+          mood_score: number | null
+          note: string | null
+          sleep_hours: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          focus_score?: number | null
+          id?: string
+          medication_taken?: string | null
+          mood_score?: number | null
+          note?: string | null
+          sleep_hours?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          focus_score?: number | null
+          id?: string
+          medication_taken?: string | null
+          mood_score?: number | null
+          note?: string | null
+          sleep_hours?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      focus_sessions: {
+        Row: {
+          actual_duration: number | null
+          created_at: string
+          energy_before: string | null
+          id: string
+          outcome_rating: string | null
+          planned_duration: number
+          task_name: string | null
+          user_id: string
+        }
+        Insert: {
+          actual_duration?: number | null
+          created_at?: string
+          energy_before?: string | null
+          id?: string
+          outcome_rating?: string | null
+          planned_duration?: number
+          task_name?: string | null
+          user_id: string
+        }
+        Update: {
+          actual_duration?: number | null
+          created_at?: string
+          energy_before?: string | null
+          id?: string
+          outcome_rating?: string | null
+          planned_duration?: number
+          task_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_logs: {
+        Row: {
+          created_at: string
+          date: string
+          habit_id: string
+          id: string
+          is_bad_day_mode: boolean
+          is_complete: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          habit_id: string
+          id?: string
+          is_bad_day_mode?: boolean
+          is_complete?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          habit_id?: string
+          id?: string
+          is_bad_day_mode?: boolean
+          is_complete?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          created_at: string
+          duration_mins: number
+          id: string
+          mvp_fallback: string | null
+          name: string
+          order_index: number
+          routine_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_mins?: number
+          id?: string
+          mvp_fallback?: string | null
+          name: string
+          order_index?: number
+          routine_name?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_mins?: number
+          id?: string
+          mvp_fallback?: string | null
+          name?: string
+          order_index?: number
+          routine_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          energy_level: string
+          id: string
+          is_complete: boolean
+          micro_first_step: string | null
+          tab: string
+          time_estimate_mins: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          energy_level?: string
+          id?: string
+          is_complete?: boolean
+          micro_first_step?: string | null
+          tab?: string
+          time_estimate_mins?: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          energy_level?: string
+          id?: string
+          is_complete?: boolean
+          micro_first_step?: string | null
+          tab?: string
+          time_estimate_mins?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profile: {
+        Row: {
+          adhd_traits: Json
+          anchor_time: string | null
+          coach_tone: string
+          created_at: string
+          focus_mode_preference: string
+          id: string
+          last_active_date: string | null
+          name: string | null
+          notifications_enabled: boolean
+          onboarding_complete: boolean
+          streak_count: number
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adhd_traits?: Json
+          anchor_time?: string | null
+          coach_tone?: string
+          created_at?: string
+          focus_mode_preference?: string
+          id?: string
+          last_active_date?: string | null
+          name?: string | null
+          notifications_enabled?: boolean
+          onboarding_complete?: boolean
+          streak_count?: number
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adhd_traits?: Json
+          anchor_time?: string | null
+          coach_tone?: string
+          created_at?: string
+          focus_mode_preference?: string
+          id?: string
+          last_active_date?: string | null
+          name?: string | null
+          notifications_enabled?: boolean
+          onboarding_complete?: boolean
+          streak_count?: number
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
