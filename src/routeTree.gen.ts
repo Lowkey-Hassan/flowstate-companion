@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
+import { Route as AppJournalRouteImport } from './routes/_app.journal'
 import { Route as AppHabitsRouteImport } from './routes/_app.habits'
 import { Route as AppFocusRouteImport } from './routes/_app.focus'
 import { Route as AppCoachRouteImport } from './routes/_app.coach'
@@ -34,6 +35,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppTasksRoute = AppTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJournalRoute = AppJournalRouteImport.update({
+  id: '/journal',
+  path: '/journal',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHabitsRoute = AppHabitsRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/coach': typeof AppCoachRoute
   '/focus': typeof AppFocusRoute
   '/habits': typeof AppHabitsRoute
+  '/journal': typeof AppJournalRoute
   '/tasks': typeof AppTasksRoute
 }
 export interface FileRoutesByTo {
@@ -65,6 +72,7 @@ export interface FileRoutesByTo {
   '/coach': typeof AppCoachRoute
   '/focus': typeof AppFocusRoute
   '/habits': typeof AppHabitsRoute
+  '/journal': typeof AppJournalRoute
   '/tasks': typeof AppTasksRoute
   '/': typeof AppIndexRoute
 }
@@ -75,14 +83,22 @@ export interface FileRoutesById {
   '/_app/coach': typeof AppCoachRoute
   '/_app/focus': typeof AppFocusRoute
   '/_app/habits': typeof AppHabitsRoute
+  '/_app/journal': typeof AppJournalRoute
   '/_app/tasks': typeof AppTasksRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/coach' | '/focus' | '/habits' | '/tasks'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/coach'
+    | '/focus'
+    | '/habits'
+    | '/journal'
+    | '/tasks'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/coach' | '/focus' | '/habits' | '/tasks' | '/'
+  to: '/login' | '/coach' | '/focus' | '/habits' | '/journal' | '/tasks' | '/'
   id:
     | '__root__'
     | '/_app'
@@ -90,6 +106,7 @@ export interface FileRouteTypes {
     | '/_app/coach'
     | '/_app/focus'
     | '/_app/habits'
+    | '/_app/journal'
     | '/_app/tasks'
     | '/_app/'
   fileRoutesById: FileRoutesById
@@ -129,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTasksRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/journal': {
+      id: '/_app/journal'
+      path: '/journal'
+      fullPath: '/journal'
+      preLoaderRoute: typeof AppJournalRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/habits': {
       id: '/_app/habits'
       path: '/habits'
@@ -157,6 +181,7 @@ interface AppRouteChildren {
   AppCoachRoute: typeof AppCoachRoute
   AppFocusRoute: typeof AppFocusRoute
   AppHabitsRoute: typeof AppHabitsRoute
+  AppJournalRoute: typeof AppJournalRoute
   AppTasksRoute: typeof AppTasksRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -165,6 +190,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCoachRoute: AppCoachRoute,
   AppFocusRoute: AppFocusRoute,
   AppHabitsRoute: AppHabitsRoute,
+  AppJournalRoute: AppJournalRoute,
   AppTasksRoute: AppTasksRoute,
   AppIndexRoute: AppIndexRoute,
 }
