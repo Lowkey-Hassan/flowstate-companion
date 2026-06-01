@@ -94,6 +94,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "FlowState — Your ADHD Companion" },
+      { name: "description", content: "Flow Companion is a private, AI-powered web app designed to help manage ADHD." },
+      { property: "og:description", content: "Flow Companion is a private, AI-powered web app designed to help manage ADHD." },
+      { name: "twitter:description", content: "Flow Companion is a private, AI-powered web app designed to help manage ADHD." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582e82de-8fbe-4488-9496-715ac9830c88/id-preview-4e0043eb--a9fdbad3-26b3-428a-97b0-df9bdce4600d.lovable.app-1780306992444.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582e82de-8fbe-4488-9496-715ac9830c88/id-preview-4e0043eb--a9fdbad3-26b3-428a-97b0-df9bdce4600d.lovable.app-1780306992444.png" },
     ],
     links: [
       {
