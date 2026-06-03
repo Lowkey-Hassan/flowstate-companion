@@ -71,6 +71,57 @@ export function useDeleteTask() {
   });
 }
 
+export type Priority = "HIGH" | "LOW";
+export type Ease = "EASY" | "HARD";
+
+export type RatedTask = {
+  dbId?: string;
+  title: string;
+  estimatedMinutes: number;
+  microStep: string;
+  priority: Priority;
+  ease: Ease;
+  quadrant_score: number;
+  display_order: number;
+};
+
+export function useSaveOrderedTasks() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (tasks: RatedTask[]) => {
+      for (const t of tasks) {
+        const payload = {
+          title: t.title,
+          time_estimate_mins: t.estimatedMinutes,
+          micro_first_step: t.microStep,
+          priority: t.priority,
+          ease: t.ease,
+          quadrant_score: t.quadrant_score,
+          display_order: t.display_order,
+          energy_level: t.ease === "HARD" ? "high" : "low",
+          tab: "today",
+          is_complete: false,
+        };
+        if (t.dbId) {
+          const { error } = await supabase
+            .from("tasks")
+            .update(payload)
+            .eq("id", t.dbId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("tasks")
+            .insert({ ...payload, user_id: user!.id });
+          if (error) throw error;
+        }
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["tasks", user?.id] }),
+  });
+}
+
+
 /* ---------------- Focus sessions ---------------- */
 export type FocusSession = Tables<"focus_sessions">;
 

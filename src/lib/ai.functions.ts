@@ -122,6 +122,68 @@ export const breakdownTasks = createServerFn({ method: "POST" })
     }
   });
 
+/* ---------------- Task extraction (Priority×Ease flow) ---------------- */
+export const extractTasks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { brainDump: string }) =>
+    z.object({ brainDump: z.string().min(1).max(4000) }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const out = await callAI(
+        [
+          {
+            role: "system",
+            content: `You are an ADHD coach. The user has brain-dumped some text. Extract every distinct actionable task. For each task provide: a short title (max 8 words, action verb first), a realistic time estimate in minutes for an ADHD brain (add a 40% buffer, be honest), and the single smallest possible first action (max 10 words).`,
+          },
+          { role: "user", content: data.brainDump },
+        ],
+        {
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "return_tasks",
+                description: "Return extracted ADHD-friendly tasks.",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    tasks: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          title: { type: "string" },
+                          estimatedMinutes: { type: "number" },
+                          microStep: { type: "string" },
+                        },
+                        required: ["title", "estimatedMinutes", "microStep"],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                  required: ["tasks"],
+                  additionalProperties: false,
+                },
+              },
+            },
+          ],
+          tool_choice: { type: "function", function: { name: "return_tasks" } },
+        },
+      );
+      const parsed = toolArgsOf(out);
+      const tasks = (parsed?.tasks ?? []).map((t: any, i: number) => ({
+        id: `task_${i + 1}`,
+        title: String(t.title ?? "").slice(0, 120),
+        estimatedMinutes: Math.max(1, Math.round(Number(t.estimatedMinutes) || 15)),
+        microStep: String(t.microStep ?? "").slice(0, 120),
+      }));
+      return { tasks };
+    } catch (e: any) {
+      return { tasks: [], error: e?.message ?? "AI_ERROR" };
+    }
+  });
+
 /* ---------------- Coach reply ---------------- */
 export const coachReply = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
