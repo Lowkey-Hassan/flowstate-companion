@@ -112,12 +112,14 @@ function TasksPage() {
         return;
       }
       const existing = ordered.map(taskToItem);
-      const fresh: RatingItem[] = res.tasks.map((t) => ({
-        id: t.id,
-        title: t.title,
-        estimatedMinutes: t.estimatedMinutes,
-        microStep: t.microStep,
-      }));
+      const fresh: RatingItem[] = res.tasks.map(
+        (t: { id: string; title: string; estimatedMinutes: number; microStep: string }) => ({
+          id: t.id,
+          title: t.title,
+          estimatedMinutes: t.estimatedMinutes,
+          microStep: t.microStep,
+        }),
+      );
       const combined = [...existing, ...fresh];
       setDump("");
 
