@@ -206,10 +206,14 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          display_order: number | null
+          ease: string | null
           energy_level: string
           id: string
           is_complete: boolean
           micro_first_step: string | null
+          priority: string | null
+          quadrant_score: number | null
           tab: string
           time_estimate_mins: number
           title: string
@@ -218,10 +222,14 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
+          display_order?: number | null
+          ease?: string | null
           energy_level?: string
           id?: string
           is_complete?: boolean
           micro_first_step?: string | null
+          priority?: string | null
+          quadrant_score?: number | null
           tab?: string
           time_estimate_mins?: number
           title: string
@@ -230,10 +238,14 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
+          display_order?: number | null
+          ease?: string | null
           energy_level?: string
           id?: string
           is_complete?: boolean
           micro_first_step?: string | null
+          priority?: string | null
+          quadrant_score?: number | null
           tab?: string
           time_estimate_mins?: number
           title?: string
