@@ -15,6 +15,15 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/focus")({
   head: () => ({ meta: [{ title: "Focus — FlowState" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    task: typeof search.task === "string" ? search.task : undefined,
+    duration:
+      typeof search.duration === "number"
+        ? search.duration
+        : typeof search.duration === "string"
+          ? Number(search.duration)
+          : undefined,
+  }),
   component: FocusPage,
 });
 
@@ -24,19 +33,23 @@ const RATINGS = ["Crushed it", "Did okay", "It was hard"];
 type Phase = "setup" | "running" | "done";
 
 function FocusPage() {
+  const { task: initialTask, duration: initialDuration } = Route.useSearch();
   const addSession = useAddFocusSession();
   const sessions = useFocusSessions();
   const online = useOnline();
   const encourageFn = useServerFn(focusEncouragement);
 
   const [phase, setPhase] = useState<Phase>("setup");
-  const [duration, setDuration] = useState(25);
-  const [taskName, setTaskName] = useState("");
+  const [duration, setDuration] = useState(
+    initialDuration && DURATIONS.includes(initialDuration) ? initialDuration : 25,
+  );
+  const [taskName, setTaskName] = useState(initialTask ?? "");
   const [remaining, setRemaining] = useState(25 * 60);
   const [paused, setPaused] = useState(false);
   const [reward, setReward] = useState("");
   const [encouragement, setEncouragement] = useState("");
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   const weeklyCount =
     (sessions.data ?? []).filter(
