@@ -31,6 +31,14 @@ function getQuadrantScore(priority: Priority, ease: Ease): number {
   return 5;
 }
 
+// Time bucket: quick tasks float up, long tasks sink.
+// < 30 min → 1 (top), 30–60 min → 2 (middle), > 60 min → 3 (end)
+function getTimeBucket(minutes: number): number {
+  if (minutes < 30) return 1;
+  if (minutes <= 60) return 2;
+  return 3;
+}
+
 type RatingItem = {
   id: string;
   dbId?: string;
@@ -170,8 +178,15 @@ function TasksPage() {
       .map((it) => ({
         it,
         score: getQuadrantScore(it.priority!, it.ease!),
+        timeBucket: getTimeBucket(it.estimatedMinutes),
       }))
-      .sort((a, b) => a.score - b.score)
+      .sort((a, b) =>
+        a.score !== b.score
+          ? a.score - b.score
+          : a.timeBucket !== b.timeBucket
+            ? a.timeBucket - b.timeBucket
+            : a.it.estimatedMinutes - b.it.estimatedMinutes,
+      )
       .map((row, i) => ({
         dbId: row.it.dbId,
         title: row.it.title,
