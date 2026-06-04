@@ -178,8 +178,15 @@ function TasksPage() {
       .map((it) => ({
         it,
         score: getQuadrantScore(it.priority!, it.ease!),
+        timeBucket: getTimeBucket(it.estimatedMinutes),
       }))
-      .sort((a, b) => a.score - b.score)
+      .sort((a, b) =>
+        a.score !== b.score
+          ? a.score - b.score
+          : a.timeBucket !== b.timeBucket
+            ? a.timeBucket - b.timeBucket
+            : a.it.estimatedMinutes - b.it.estimatedMinutes,
+      )
       .map((row, i) => ({
         dbId: row.it.dbId,
         title: row.it.title,
