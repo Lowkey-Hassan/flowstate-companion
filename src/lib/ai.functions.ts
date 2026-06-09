@@ -340,3 +340,232 @@ export const weeklyReview = createServerFn({ method: "POST" })
       return { text: "", error: e?.message ?? "AI_ERROR" };
     }
   });
+
+/* ---------------- ThoughtBook: analyze a thought ---------------- */
+const WORD_CATEGORIES = [
+  "core_theme",
+  "emotion",
+  "desire",
+  "conflict",
+  "external",
+  "question",
+  "context",
+] as const;
+
+export const analyzeThought = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { thought: string; name?: string; traits?: string[] }) =>
+    z
+      .object({
+        thought: z.string().min(1).max(8000),
+        name: z.string().max(120).optional(),
+        traits: z.array(z.string()).max(20).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => {
+    const thought = data.thought;
+    const userName = data.name || "the user";
+    const userTraits = data.traits?.length ? data.traits.join(", ") : "general ADHD";
+
+    const cloudCall = callAI(
+      [
+        {
+          role: "system",
+          content: `You are a thought analysis engine. Analyze the user's raw thought dump and extract the most semantically meaningful words and short phrases (2-3 word max). Do NOT extract common words (I, the, and, is, was, etc.). For each word/phrase return: word (the word or short phrase), importance (1-10, where 10 = most central to the thought's meaning, not just frequency), category (one of: core_theme, emotion, desire, conflict, external, question, context). Max 18 words/phrases. Prioritize quality over quantity.`,
+        },
+        { role: "user", content: thought },
+      ],
+      {
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "return_word_cloud",
+              description: "Return the analyzed word cloud.",
+              parameters: {
+                type: "object",
+                properties: {
+                  words: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        word: { type: "string" },
+                        importance: { type: "number" },
+                        category: { type: "string", enum: [...WORD_CATEGORIES] },
+                      },
+                      required: ["word", "importance", "category"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["words"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "return_word_cloud" } },
+      },
+    );
+
+    const breakdownCall = callAI(
+      [
+        {
+          role: "system",
+          content: `You are a deeply perceptive thought coach. The user has brain-dumped a raw, unfiltered thought. Understand it at multiple levels. Return:
+- crystallized: One single sentence (max 25 words) that captures the real, honest core of this thought — the thing the user is actually feeling but couldn't say directly. It should feel like a revelation, not a summary.
+- tones: 2-4 emotional tones detected, lowercase, max 2 words each.
+- breakdown: 3-4 interpretation bullets — what the user is actually saying beneath the surface. Max 20 words each. Only include a 4th if genuinely distinct.
+- hiddenQuestion: The single most important unresolved question embedded in this thought, phrased exactly as the user might ask themselves at 2am. Max 15 words.
+User name: ${userName}. User ADHD traits: ${userTraits}.`,
+        },
+        { role: "user", content: thought },
+      ],
+      {
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "return_breakdown",
+              description: "Return the deep breakdown of the thought.",
+              parameters: {
+                type: "object",
+                properties: {
+                  crystallized: { type: "string" },
+                  tones: { type: "array", items: { type: "string" } },
+                  breakdown: { type: "array", items: { type: "string" } },
+                  hiddenQuestion: { type: "string" },
+                },
+                required: ["crystallized", "tones", "breakdown", "hiddenQuestion"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "return_breakdown" } },
+      },
+    );
+
+    try {
+      const [cloudOut, breakdownOut] = await Promise.all([cloudCall, breakdownCall]);
+      const cloud = toolArgsOf(cloudOut);
+      const bd = toolArgsOf(breakdownOut);
+
+      const wordCloudData = (cloud?.words ?? [])
+        .slice(0, 18)
+        .map((w: any) => ({
+          word: String(w.word ?? "").slice(0, 60),
+          importance: Math.min(10, Math.max(1, Math.round(Number(w.importance) || 5))),
+          category: WORD_CATEGORIES.includes(w.category) ? w.category : "context",
+        }))
+        .filter((w: any) => w.word);
+
+      const tones = (bd?.tones ?? [])
+        .slice(0, 4)
+        .map((t: any) => String(t).toLowerCase().slice(0, 30))
+        .filter(Boolean);
+      const breakdown = (bd?.breakdown ?? [])
+        .slice(0, 4)
+        .map((b: any) => String(b).slice(0, 200))
+        .filter(Boolean);
+
+      return {
+        crystallized: String(bd?.crystallized ?? "").slice(0, 400),
+        tones,
+        breakdown,
+        hiddenQuestion: String(bd?.hiddenQuestion ?? "").slice(0, 200),
+        wordCloudData,
+      };
+    } catch (e: any) {
+      return {
+        crystallized: "",
+        tones: [],
+        breakdown: [],
+        hiddenQuestion: "",
+        wordCloudData: [],
+        error: e?.message ?? "AI_ERROR",
+      };
+    }
+  });
+
+/* ---------------- ThoughtBook: detect chapters ---------------- */
+export const detectChapters = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: { entries: { id: string; crystallized: string; tones: string[] }[] }) =>
+      z
+        .object({
+          entries: z
+            .array(
+              z.object({
+                id: z.string(),
+                crystallized: z.string(),
+                tones: z.array(z.string()),
+              }),
+            )
+            .min(1)
+            .max(200),
+        })
+        .parse(d),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const summaries = data.entries.map((e) => ({
+        id: e.id,
+        crystallized: e.crystallized,
+        tones: e.tones,
+      }));
+      const out = await callAI(
+        [
+          {
+            role: "system",
+            content: `You are a thoughtful literary analyst reading someone's private thought journal. Analyze the following thought entries (their crystallized thoughts and emotional tones) and group them into 2-5 thematic chapters. For each chapter: name (a short, poetic, evocative title, 3-6 words — not clinical, not generic; good: "The question of staying", "Learning to trust my own noise"; bad: "Career Concerns", "Self-doubt"); theme (one sentence describing the common thread, max 20 words); entryIds (array of entry IDs that belong to this chapter). Each entry belongs to only ONE chapter (pick its dominant theme). If an entry doesn't fit any theme, put it in a default chapter called "Loose thoughts".`,
+          },
+          { role: "user", content: JSON.stringify(summaries).slice(0, 8000) },
+        ],
+        {
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "return_chapters",
+                description: "Return the detected chapters.",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    chapters: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          name: { type: "string" },
+                          theme: { type: "string" },
+                          entryIds: { type: "array", items: { type: "string" } },
+                        },
+                        required: ["name", "theme", "entryIds"],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                  required: ["chapters"],
+                  additionalProperties: false,
+                },
+              },
+            },
+          ],
+          tool_choice: { type: "function", function: { name: "return_chapters" } },
+        },
+      );
+      const parsed = toolArgsOf(out);
+      const chapters = (parsed?.chapters ?? []).map((c: any) => ({
+        name: String(c.name ?? "Loose thoughts").slice(0, 120),
+        theme: String(c.theme ?? "").slice(0, 240),
+        entryIds: Array.isArray(c.entryIds) ? c.entryIds.map((id: any) => String(id)) : [],
+      }));
+      return { chapters };
+    } catch (e: any) {
+      return { chapters: [], error: e?.message ?? "AI_ERROR" };
+    }
+  });

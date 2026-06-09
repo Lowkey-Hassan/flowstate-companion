@@ -1,9 +1,10 @@
-import { Home, Zap, CheckSquare, MessageCircle, Repeat, BookOpen } from "lucide-react";
+import { Home, Zap, CheckSquare, MessageCircle, Repeat, BookOpen, NotebookPen } from "lucide-react";
 
 export const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, exact: true },
   { to: "/focus", label: "Focus", icon: Zap, exact: false },
   { to: "/tasks", label: "Tasks", icon: CheckSquare, exact: false },
+  { to: "/thoughtbook", label: "ThoughtBook", icon: NotebookPen, exact: false },
   { to: "/coach", label: "Coach", icon: MessageCircle, exact: false },
   { to: "/habits", label: "Habits", icon: Repeat, exact: false },
   { to: "/journal", label: "Journal", icon: BookOpen, exact: false },
