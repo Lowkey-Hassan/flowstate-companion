@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { CloudWord } from "@/lib/data";
 import {
   CATEGORY_LABELS,
@@ -18,7 +18,7 @@ export function WordCloud({
   stagger?: number;
   showLegend?: boolean;
 }) {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const scale = isMobile ? 0.82 : 1;
 
   const categoriesPresent = Array.from(new Set(words.map((w) => w.category)));
