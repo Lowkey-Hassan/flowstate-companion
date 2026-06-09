@@ -253,6 +253,95 @@ export type Database = {
         }
         Relationships: []
       }
+      thought_chapters: {
+        Row: {
+          chapter_number: number
+          created_at: string
+          entry_count: number
+          generated_at: string
+          id: string
+          name: string
+          theme: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_number?: number
+          created_at?: string
+          entry_count?: number
+          generated_at?: string
+          id?: string
+          name: string
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_number?: number
+          created_at?: string
+          entry_count?: number
+          generated_at?: string
+          id?: string
+          name?: string
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      thought_entries: {
+        Row: {
+          breakdown: string[]
+          chapter_id: string | null
+          created_at: string
+          crystallized: string | null
+          hidden_question: string | null
+          id: string
+          is_saved: boolean
+          raw_thought: string
+          tones: string[]
+          updated_at: string
+          user_id: string
+          word_cloud_data: Json
+        }
+        Insert: {
+          breakdown?: string[]
+          chapter_id?: string | null
+          created_at?: string
+          crystallized?: string | null
+          hidden_question?: string | null
+          id?: string
+          is_saved?: boolean
+          raw_thought: string
+          tones?: string[]
+          updated_at?: string
+          user_id: string
+          word_cloud_data?: Json
+        }
+        Update: {
+          breakdown?: string[]
+          chapter_id?: string | null
+          created_at?: string
+          crystallized?: string | null
+          hidden_question?: string | null
+          id?: string
+          is_saved?: boolean
+          raw_thought?: string
+          tones?: string[]
+          updated_at?: string
+          user_id?: string
+          word_cloud_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thought_entries_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "thought_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profile: {
         Row: {
           adhd_traits: Json
