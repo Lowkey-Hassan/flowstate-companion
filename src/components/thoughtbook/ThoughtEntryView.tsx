@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Bookmark, Trash2, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -12,20 +12,20 @@ const BULLET_COLORS = ["#C9A84C", "#5DCAA5", "#E24B4A", "#AFA9EC"];
 
 function useTypewriter(text: string, enabled: boolean) {
   const [shown, setShown] = useState(enabled ? "" : text);
-  // Stream characters when enabled.
-  useState(() => {
+  useEffect(() => {
     if (!enabled || !text) {
       setShown(text);
       return;
     }
     let i = 0;
+    setShown("");
     const id = setInterval(() => {
       i += 1;
       setShown(text.slice(0, i));
       if (i >= text.length) clearInterval(id);
     }, 20);
     return () => clearInterval(id);
-  });
+  }, [text, enabled]);
   return shown;
 }
 
