@@ -319,3 +319,177 @@ export function useAddCoachMessage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["coach", user?.id] }),
   });
 }
+
+/* ---------------- ThoughtBook ---------------- */
+export type CloudWord = {
+  word: string;
+  importance: number;
+  category: string;
+};
+
+export type ThoughtEntry = Tables<"thought_entries">;
+export type ThoughtChapter = Tables<"thought_chapters">;
+
+export function wordCloudOf(entry: ThoughtEntry): CloudWord[] {
+  const raw = entry.word_cloud_data;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((w: any) => ({
+      word: String(w?.word ?? ""),
+      importance: Number(w?.importance ?? 5),
+      category: String(w?.category ?? "context"),
+    }))
+    .filter((w) => w.word);
+}
+
+export function useThoughtEntries() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["thoughts", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("thought_entries")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as ThoughtEntry[];
+    },
+  });
+}
+
+export function useThoughtChapters() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["thought_chapters", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("thought_chapters")
+        .select("*")
+        .order("chapter_number", { ascending: true });
+      if (error) throw error;
+      return data as ThoughtChapter[];
+    },
+  });
+}
+
+export type NewThoughtEntry = {
+  raw_thought: string;
+  crystallized?: string | null;
+  hidden_question?: string | null;
+  tones?: string[];
+  breakdown?: string[];
+  word_cloud_data?: CloudWord[];
+};
+
+export function useAddThoughtEntry() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (entry: NewThoughtEntry) => {
+      const { data, error } = await supabase
+        .from("thought_entries")
+        .insert({
+          user_id: user!.id,
+          raw_thought: entry.raw_thought,
+          crystallized: entry.crystallized ?? null,
+          hidden_question: entry.hidden_question ?? null,
+          tones: entry.tones ?? [],
+          breakdown: entry.breakdown ?? [],
+          word_cloud_data: (entry.word_cloud_data ?? []) as any,
+        })
+        .select("*")
+        .single();
+      if (error) throw error;
+      return data as ThoughtEntry;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["thoughts", user?.id] }),
+  });
+}
+
+export function useUpdateThoughtEntry() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: Partial<ThoughtEntry>;
+    }) => {
+      const { error } = await supabase
+        .from("thought_entries")
+        .update(patch)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["thoughts", user?.id] }),
+  });
+}
+
+export function useDeleteThoughtEntry() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("thought_entries")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["thoughts", user?.id] }),
+  });
+}
+
+export type DetectedChapter = {
+  name: string;
+  theme: string;
+  entryIds: string[];
+};
+
+export function useSaveChapters() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (chapters: DetectedChapter[]) => {
+      // Clear previous chapter assignments + chapters, then rebuild.
+      await supabase
+        .from("thought_entries")
+        .update({ chapter_id: null })
+        .eq("user_id", user!.id);
+      await supabase.from("thought_chapters").delete().eq("user_id", user!.id);
+
+      let n = 1;
+      for (const ch of chapters) {
+        const { data: created, error } = await supabase
+          .from("thought_chapters")
+          .insert({
+            user_id: user!.id,
+            chapter_number: n,
+            name: ch.name,
+            theme: ch.theme,
+            entry_count: ch.entryIds.length,
+          })
+          .select("*")
+          .single();
+        if (error) throw error;
+        if (ch.entryIds.length) {
+          const { error: upErr } = await supabase
+            .from("thought_entries")
+            .update({ chapter_id: created.id })
+            .in("id", ch.entryIds)
+            .eq("user_id", user!.id);
+          if (upErr) throw upErr;
+        }
+        n += 1;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["thoughts", user?.id] });
+      qc.invalidateQueries({ queryKey: ["thought_chapters", user?.id] });
+    },
+  });
+}
