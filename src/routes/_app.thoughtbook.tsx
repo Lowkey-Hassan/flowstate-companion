@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2, BookOpen, ArrowLeft, BrainCircuit } from "lucide-react";
+import { Sparkles, Loader2, BookOpen, ArrowLeft, BrainCircuit, Mic, Square } from "lucide-react";
 import { toast } from "sonner";
 import { PageTitle } from "@/components/PageTitle";
 import { WordCloud } from "@/components/thoughtbook/WordCloud";
@@ -20,6 +20,7 @@ import {
 } from "@/lib/data";
 import { useProfile, traitsOf } from "@/lib/profile";
 import { useOnline } from "@/hooks/use-online";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { analyzeThought, detectChapters } from "@/lib/ai.functions";
 import { buildMasterCloud, formatNowTime, romanNumeral } from "@/lib/thoughtbook";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,29 @@ function ThoughtBookPage() {
     }, 3000);
     return () => clearInterval(id);
   }, []);
+
+  /* ---------- Voice dictation ---------- */
+  const speech = useSpeechRecognition({
+    onFinalChunk: (text) => {
+      setDraft((prev) => {
+        const sep = prev && !/\s$/.test(prev) ? " " : "";
+        return prev + sep + text;
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (!speech.error) return;
+    if (speech.error === "not-allowed" || speech.error === "service-not-allowed") {
+      toast.error("I need microphone access to listen. Enable it in your browser settings.");
+    } else if (speech.error === "unsupported") {
+      toast.error("Your browser doesn't support voice dictation. Try Chrome or Edge.");
+    } else {
+      toast.error("Dictation hit a snag. Give it another tap.");
+    }
+  }, [speech.error]);
+
+
 
   /* ---------- Crystallize flow ---------- */
   const [phase, setPhase] = useState<"idle" | "processing" | "result">("idle");
@@ -201,25 +225,72 @@ function ThoughtBookPage() {
               onChange={(e) => setDraft(e.target.value)}
               disabled={phase === "processing"}
               rows={6}
-              placeholder="Just start typing. Whatever is looping in your head right now — no filter, no structure."
+              placeholder="Just start typing — or tap the mic and speak. Whatever is looping in your head right now — no filter, no structure."
               className="w-full resize-none bg-transparent text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-50"
             />
-            <div className="mt-3 flex items-center justify-between">
+
+            {/* Live dictation preview */}
+            <AnimatePresence>
+              {speech.listening && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="mt-1 text-sm leading-relaxed text-muted-foreground italic"
+                >
+                  {speech.interim || "Listening… start talking."}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            <div className="mt-3 flex items-center justify-between gap-3">
               <span className="text-[11px] text-tertiary-fg">
-                {draft.length > 0 ? `${draft.length} characters` : "Autosaving every 3 seconds"}
+                {speech.listening
+                  ? "Recording… tap the mic to stop"
+                  : draft.length > 0
+                    ? `${draft.length} characters`
+                    : "Autosaving every 3 seconds"}
               </span>
-              <button
-                onClick={crystallize}
-                disabled={phase === "processing" || !draft.trim()}
-                className="press flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
-              >
-                {phase === "processing" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                {speech.supported && (
+                  <button
+                    onClick={speech.toggle}
+                    disabled={phase === "processing"}
+                    aria-label={speech.listening ? "Stop dictation" : "Start dictation"}
+                    title={speech.listening ? "Stop dictation" : "Dictate your thought"}
+                    className={cn(
+                      "press flex h-9 w-9 items-center justify-center rounded-lg border transition-colors disabled:opacity-40",
+                      speech.listening
+                        ? "border-gold/40 bg-gold/15 text-gold"
+                        : "border-border bg-surface-2 text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {speech.listening ? (
+                      <span className="relative flex h-4 w-4 items-center justify-center">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold/40" />
+                        <Square className="h-3 w-3 fill-current" />
+                      </span>
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                  </button>
                 )}
-                {phase === "processing" ? "Crystallizing…" : "Crystallize"}
-              </button>
+                <button
+                  onClick={() => {
+                    if (speech.listening) speech.stop();
+                    crystallize();
+                  }}
+                  disabled={phase === "processing" || !draft.trim()}
+                  className="press flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  {phase === "processing" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  {phase === "processing" ? "Crystallizing…" : "Crystallize"}
+                </button>
+              </div>
             </div>
           </div>
 
