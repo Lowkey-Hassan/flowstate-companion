@@ -20,6 +20,7 @@ import {
 } from "@/lib/data";
 import { useProfile, traitsOf } from "@/lib/profile";
 import { useOnline } from "@/hooks/use-online";
+import { useSpeechRecognition } from "@/hooks/use-speech-recognition";
 import { analyzeThought, detectChapters } from "@/lib/ai.functions";
 import { buildMasterCloud, formatNowTime, romanNumeral } from "@/lib/thoughtbook";
 import { cn } from "@/lib/utils";
