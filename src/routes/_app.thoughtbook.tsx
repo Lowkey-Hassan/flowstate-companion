@@ -83,6 +83,19 @@ function ThoughtBookPage() {
     },
   });
 
+  useEffect(() => {
+    if (!speech.error) return;
+    if (speech.error === "not-allowed" || speech.error === "service-not-allowed") {
+      toast.error("I need microphone access to listen. Enable it in your browser settings.");
+    } else if (speech.error === "unsupported") {
+      toast.error("Your browser doesn't support voice dictation. Try Chrome or Edge.");
+    } else {
+      toast.error("Dictation hit a snag. Give it another tap.");
+    }
+  }, [speech.error]);
+
+
+
   /* ---------- Crystallize flow ---------- */
   const [phase, setPhase] = useState<"idle" | "processing" | "result">("idle");
   const [latestEntry, setLatestEntry] = useState<ThoughtEntry | null>(null);
