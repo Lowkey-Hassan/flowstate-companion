@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2, BookOpen, ArrowLeft, BrainCircuit } from "lucide-react";
+import { Sparkles, Loader2, BookOpen, ArrowLeft, BrainCircuit, Mic, Square } from "lucide-react";
 import { toast } from "sonner";
 import { PageTitle } from "@/components/PageTitle";
 import { WordCloud } from "@/components/thoughtbook/WordCloud";
