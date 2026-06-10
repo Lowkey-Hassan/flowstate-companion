@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as AppThoughtbookRouteImport } from './routes/_app.thoughtbook'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
@@ -31,6 +32,11 @@ const AppRoute = AppRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppThoughtbookRoute = AppThoughtbookRouteImport.update({
+  id: '/thoughtbook',
+  path: '/thoughtbook',
   getParentRoute: () => AppRoute,
 } as any)
 const AppTasksRoute = AppTasksRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/journal': typeof AppJournalRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
+  '/thoughtbook': typeof AppThoughtbookRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/journal': typeof AppJournalRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
+  '/thoughtbook': typeof AppThoughtbookRoute
   '/': typeof AppIndexRoute
 }
 export interface FileRoutesById {
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/_app/journal': typeof AppJournalRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tasks': typeof AppTasksRoute
+  '/_app/thoughtbook': typeof AppThoughtbookRoute
   '/_app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/settings'
     | '/tasks'
+    | '/thoughtbook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/journal'
     | '/settings'
     | '/tasks'
+    | '/thoughtbook'
     | '/'
   id:
     | '__root__'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_app/journal'
     | '/_app/settings'
     | '/_app/tasks'
+    | '/_app/thoughtbook'
     | '/_app/'
   fileRoutesById: FileRoutesById
 }
@@ -156,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/thoughtbook': {
+      id: '/_app/thoughtbook'
+      path: '/thoughtbook'
+      fullPath: '/thoughtbook'
+      preLoaderRoute: typeof AppThoughtbookRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/tasks': {
@@ -210,6 +229,7 @@ interface AppRouteChildren {
   AppJournalRoute: typeof AppJournalRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTasksRoute: typeof AppTasksRoute
+  AppThoughtbookRoute: typeof AppThoughtbookRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
@@ -220,6 +240,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppJournalRoute: AppJournalRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTasksRoute: AppTasksRoute,
+  AppThoughtbookRoute: AppThoughtbookRoute,
   AppIndexRoute: AppIndexRoute,
 }
 
@@ -232,3 +253,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
