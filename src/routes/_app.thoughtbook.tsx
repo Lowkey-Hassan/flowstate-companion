@@ -430,7 +430,15 @@ function ThoughtBookPage() {
               <p className="mb-6 text-sm text-muted-foreground">
                 The words that keep showing up — sized by how central they are to everything you've written.
               </p>
-              <WordCloud words={masterCloud} minHeight={220} stagger={0.03} />
+          <WordCloud
+            words={masterCloud.map((w) => ({
+              word: w.word,
+              importance: w.masterImportance,
+              category: w.dominantCategory,
+            }))}
+            minHeight={220}
+            stagger={0.03}
+          />
             </div>
           ) : (
             <EmptyState
