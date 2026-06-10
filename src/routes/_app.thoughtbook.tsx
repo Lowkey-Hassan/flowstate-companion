@@ -73,6 +73,16 @@ function ThoughtBookPage() {
     return () => clearInterval(id);
   }, []);
 
+  /* ---------- Voice dictation ---------- */
+  const speech = useSpeechRecognition({
+    onFinalChunk: (text) => {
+      setDraft((prev) => {
+        const sep = prev && !/\s$/.test(prev) ? " " : "";
+        return prev + sep + text;
+      });
+    },
+  });
+
   /* ---------- Crystallize flow ---------- */
   const [phase, setPhase] = useState<"idle" | "processing" | "result">("idle");
   const [latestEntry, setLatestEntry] = useState<ThoughtEntry | null>(null);
