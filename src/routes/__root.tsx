@@ -79,25 +79,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FlowState — Your ADHD Companion" },
+      { title: "FlowState — Focus & Clarity" },
       {
         name: "description",
         content:
-          "A private, AI-powered companion built for how the ADHD brain actually works.",
+          "FlowState is a personal focus and clarity tool. Train your attention, understand your patterns, and think more clearly — every day.",
       },
       { name: "author", content: "FlowState" },
-      { property: "og:title", content: "FlowState — Your ADHD Companion" },
+      { property: "og:title", content: "FlowState — Focus & Clarity" },
       {
         property: "og:description",
         content:
-          "A private, AI-powered companion built for how the ADHD brain actually works.",
+          "FlowState is a personal focus and clarity tool. Train your attention, understand your patterns, and think more clearly — every day.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "FlowState — Your ADHD Companion" },
-      { name: "description", content: "Flow Companion is a private, AI-powered web app designed to help manage ADHD." },
-      { property: "og:description", content: "Flow Companion is a private, AI-powered web app designed to help manage ADHD." },
-      { name: "twitter:description", content: "Flow Companion is a private, AI-powered web app designed to help manage ADHD." },
+      { name: "twitter:title", content: "FlowState — Focus & Clarity" },
+      { name: "twitter:description", content: "FlowState is a personal focus and clarity tool. Train your attention, understand your patterns, and think more clearly — every day." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582e82de-8fbe-4488-9496-715ac9830c88/id-preview-4e0043eb--a9fdbad3-26b3-428a-97b0-df9bdce4600d.lovable.app-1780306992444.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582e82de-8fbe-4488-9496-715ac9830c88/id-preview-4e0043eb--a9fdbad3-26b3-428a-97b0-df9bdce4600d.lovable.app-1780306992444.png" },
     ],
