@@ -225,96 +225,20 @@ User's name: ${data.name || "friend"}.`;
     }
   });
 
-/* ---------------- Build routine ---------------- */
-export const buildRoutine = createServerFn({ method: "POST" })
+/* ---------------- Journal: weekly letter ---------------- */
+export const weeklyLetter = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { type: string; traits: string[]; anchorTime: string }) => d)
-  .handler(async ({ data }) => {
-    try {
-      const traits = data.traits?.length ? data.traits.join(", ") : "general ADHD";
-      const out = await callAI(
-        [
-          {
-            role: "system",
-            content: `Create an ADHD-friendly ${data.type} routine for someone with traits: ${traits}. Anchor time: ${data.anchorTime || "flexible"}. Realistic for ADHD brains: short steps, built-in transitions, no more than 8 items. For each habit include: name, duration in minutes (realistic), and a 'minimum viable version' for bad days (drastically shortened fallback).`,
-          },
-          { role: "user", content: `Build my ${data.type} routine.` },
-        ],
-        {
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "return_routine",
-                description: "Return an ADHD-friendly routine.",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    habits: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          name: { type: "string" },
-                          duration_mins: { type: "number" },
-                          mvp_fallback: { type: "string" },
-                        },
-                        required: ["name", "duration_mins", "mvp_fallback"],
-                        additionalProperties: false,
-                      },
-                    },
-                  },
-                  required: ["habits"],
-                  additionalProperties: false,
-                },
-              },
-            },
-          ],
-          tool_choice: { type: "function", function: { name: "return_routine" } },
-        },
-      );
-      const parsed = toolArgsOf(out);
-      return { habits: parsed?.habits ?? [] };
-    } catch (e: any) {
-      return { habits: [], error: e?.message ?? "AI_ERROR" };
-    }
-  });
-
-/* ---------------- Journal insights ---------------- */
-export const journalInsights = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { logs: unknown[] }) => d)
+  .inputValidator((d: { logs: unknown[]; name?: string }) => d)
   .handler(async ({ data }) => {
     try {
       const out = await callAI([
         {
           role: "system",
-          content:
-            "Analyze these daily self-reported logs. Identify 2-3 actionable patterns (e.g. 'Your focus is consistently lower on days with under 6h sleep'). Be specific, warm, data-driven. Max 3 points, max 20 words each. Return only bullet points, one per line, each starting with '- '.",
+          content: `You are writing a brief, warm, personal letter to the user summarizing their week based on their self-reported data. Write in second person ("You"). Be specific — cite actual numbers. Be like a perceptive friend who noticed something real, not a wellness app spitting generic encouragement. No bullet points. No headers. Just 3-4 flowing sentences. Max 80 words. Tone: warm, honest, slightly literary.`,
         },
-        { role: "user", content: JSON.stringify(data.logs).slice(0, 4000) },
-      ]);
-      const points = textOf(out)
-        .split("\n")
-        .map((l) => l.replace(/^[-•*]\s*/, "").trim())
-        .filter(Boolean)
-        .slice(0, 3);
-      return { points };
-    } catch (e: any) {
-      return { points: [], error: e?.message ?? "AI_ERROR" };
-    }
-  });
-
-/* ---------------- Focus encouragement ---------------- */
-export const focusEncouragement = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: { weeklyCount: number; rating: string }) => d)
-  .handler(async ({ data }) => {
-    try {
-      const out = await callAI([
         {
           role: "user",
-          content: `Someone just finished a focus session rated "${data.rating}". It's their ${data.weeklyCount} focus session this week. Give one short warm encouraging sentence, under 16 words, no emojis. Return only the sentence.`,
+          content: `Data for the week:\n${JSON.stringify(data.logs).slice(0, 4000)}\nUser name: ${data.name || "friend"}`,
         },
       ]);
       return { text: textOf(out) };
@@ -323,16 +247,112 @@ export const focusEncouragement = createServerFn({ method: "POST" })
     }
   });
 
-/* ---------------- Weekly review ---------------- */
-export const weeklyReview = createServerFn({ method: "POST" })
+/* ---------------- Journal: correlation discoveries ---------------- */
+export const correlationDiscoveries = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { focusMinutes: number; tasks: number; habitPct: number; streak: number }) => d)
+  .inputValidator((d: { logs: unknown[] }) => d)
   .handler(async ({ data }) => {
     try {
       const out = await callAI([
         {
+          role: "system",
+          content: `You are a pattern analyst reviewing someone's self-reported daily logs. Find 2-3 specific, interesting correlations in the data. Each should feel like a genuine discovery — something the user might not have noticed themselves. Format each as: {"discovery": "short punchy headline max 8 words", "detail": "one sentence explanation with specific numbers from the data, max 25 words"}. Return ONLY a valid JSON array. No markdown.`,
+        },
+        { role: "user", content: JSON.stringify(data.logs).slice(0, 5000) },
+      ]);
+      const raw = textOf(out).replace(/```json|```/g, "").trim();
+      let items: { discovery: string; detail: string }[] = [];
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          items = parsed
+            .map((d: any) => ({
+              discovery: String(d?.discovery ?? "").slice(0, 80),
+              detail: String(d?.detail ?? "").slice(0, 200),
+            }))
+            .filter((d) => d.discovery)
+            .slice(0, 3);
+        }
+      } catch {
+        /* ignore parse errors */
+      }
+      return { items };
+    } catch (e: any) {
+      return { items: [], error: e?.message ?? "AI_ERROR" };
+    }
+  });
+
+/* ---------------- Journal: peak self profile ---------------- */
+export const peakProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { logs: unknown[] }) => d)
+  .handler(async ({ data }) => {
+    try {
+      const out = await callAI([
+        {
+          role: "system",
+          content: `Based on the user's log data, write a 3-line "peak conditions" profile. This describes the specific conditions under which this person performs at their best. Format: 3 short sentences. Each starts with "You focus best when..." or "Your sharpest days follow..." etc. Be hyper-specific — cite time ranges, sleep hours, patterns from the data. Max 15 words per line. Return as a JSON array of 3 strings.`,
+        },
+        { role: "user", content: JSON.stringify(data.logs).slice(0, 6000) },
+      ]);
+      const raw = textOf(out).replace(/```json|```/g, "").trim();
+      let lines: string[] = [];
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          lines = parsed.map((l: any) => String(l).slice(0, 120)).filter(Boolean).slice(0, 3);
+        }
+      } catch {
+        /* ignore */
+      }
+      return { lines };
+    } catch (e: any) {
+      return { lines: [], error: e?.message ?? "AI_ERROR" };
+    }
+  });
+
+/* ---------------- Chess: post-game report ---------------- */
+export const chessReport = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: {
+      result: string;
+      endCondition: string;
+      totalMoves: number;
+      accuracy: number;
+      blunders: number;
+      mistakes: number;
+      inaccuracies: number;
+      brilliant: number;
+      difficultyLabel: string;
+      minSkill: number;
+      maxSkill: number;
+      durationSeconds: number;
+      timeControlMinutes: number;
+    }) => d,
+  )
+  .handler(async ({ data }) => {
+    try {
+      const mins = Math.floor(data.durationSeconds / 60);
+      const secs = data.durationSeconds % 60;
+      const out = await callAI([
+        {
+          role: "system",
+          content: `You are a chess coach reviewing a game. Write a 3-sentence game review. Sentence 1: The game's defining moment. Sentence 2: One clear observation about the player's style or decision-making in this game. Sentence 3: One specific thing to focus on next game. Be direct, knowledgeable, and human. No generic advice. Max 80 words total.`,
+        },
+        {
           role: "user",
-          content: `Write one warm reflective sentence about this person's week. They had ${data.focusMinutes} focus minutes, completed ${data.tasks} tasks, ${data.habitPct}% habit completion, ${data.streak}-day streak. Under 22 words. No emojis. Return only the sentence.`,
+          content: `Game data:
+- Result: ${data.result}
+- How it ended: ${data.endCondition}
+- Total moves: ${data.totalMoves}
+- Player accuracy: ${data.accuracy}%
+- Blunders: ${data.blunders}, Mistakes: ${data.mistakes}, Inaccuracies: ${data.inaccuracies}
+- Brilliant moves: ${data.brilliant}
+- AI difficulty: ${data.difficultyLabel}
+- AI skill range during game: ${data.minSkill} to ${data.maxSkill}
+- Game duration: ${mins}m ${secs}s
+- Time control: ${data.timeControlMinutes} minutes`,
         },
       ]);
       return { text: textOf(out) };
