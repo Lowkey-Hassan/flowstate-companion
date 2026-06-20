@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
-import { ADHD_TRAITS, ANCHOR_TIMES } from "@/lib/constants";
+import { MIND_TRAITS, ANCHOR_TIMES } from "@/lib/constants";
 import { useUpdateProfile } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ export function Onboarding() {
   const finish = () => {
     update.mutate({
       name: name.trim() || null,
-      adhd_traits: traits,
+      mind_traits: traits,
       anchor_time: anchor,
       coach_tone: tone,
       onboarding_complete: true,
