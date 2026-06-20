@@ -51,11 +51,11 @@ export const getGreeting = createServerFn({ method: "POST" })
   .inputValidator((d: { partOfDay: string; traits: string[] }) => d)
   .handler(async ({ data }) => {
     try {
-      const traits = data.traits?.length ? data.traits.join(", ") : "general ADHD";
+      const traits = data.traits?.length ? data.traits.join(", ") : "no specifics shared";
       const out = await callAI([
         {
           role: "user",
-          content: `Give a single warm, non-cheesy, ADHD-aware motivational sentence for someone starting their ${data.partOfDay}. Their ADHD traits are: ${traits}. Max 18 words. No emojis. Return only the sentence.`,
+          content: `Give a single warm, grounded, human sentence for someone starting their ${data.partOfDay}. Their cognitive style: ${traits}. Make it specific to the time of day. Max 18 words. No clichés. No emojis. Return only the sentence.`,
         },
       ]);
       return { text: textOf(out) };
@@ -72,12 +72,12 @@ export const breakdownTasks = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     try {
-      const traits = data.traits?.length ? data.traits.join(", ") : "general ADHD";
+      const traits = data.traits?.length ? data.traits.join(", ") : "no specifics shared";
       const out = await callAI(
         [
           {
             role: "system",
-            content: `You are an ADHD coach. The user has brain-dumped text. Extract all actionable tasks. For each task provide: title (max 8 words), estimated time in minutes (realistic for ADHD — add 40% buffer), energy required (low/medium/high), and one micro-first-step (the single tiniest action to start, max 10 words). User's ADHD traits: ${traits}.`,
+            content: `You are a focus coach. The user has brain-dumped text. Extract all actionable tasks. For each task provide: title (max 8 words), estimated time in minutes (realistic — add a 40% buffer), energy required (low/medium/high), and one micro-first-step (the single tiniest action to start, max 10 words). The user's cognitive style: ${traits}.`,
           },
           { role: "user", content: data.brainDump },
         ],
@@ -87,7 +87,7 @@ export const breakdownTasks = createServerFn({ method: "POST" })
               type: "function",
               function: {
                 name: "return_tasks",
-                description: "Return extracted ADHD-friendly tasks.",
+                description: "Return extracted manageable tasks.",
                 parameters: {
                   type: "object",
                   properties: {
@@ -134,7 +134,7 @@ export const extractTasks = createServerFn({ method: "POST" })
         [
           {
             role: "system",
-            content: `You are an ADHD coach. The user has brain-dumped some text. Extract every distinct actionable task. For each task provide: a short title (max 8 words, action verb first), a realistic time estimate in minutes for an ADHD brain (add a 40% buffer, be honest), and the single smallest possible first action (max 10 words).`,
+            content: `You are a focus coach. The user has brain-dumped some text. Extract every distinct actionable task. For each task provide: a short title (max 8 words, action verb first), a realistic time estimate in minutes (add a 40% buffer, be honest), and the single smallest possible first action (max 10 words).`,
           },
           { role: "user", content: data.brainDump },
         ],
@@ -144,7 +144,7 @@ export const extractTasks = createServerFn({ method: "POST" })
               type: "function",
               function: {
                 name: "return_tasks",
-                description: "Return extracted ADHD-friendly tasks.",
+                description: "Return extracted manageable tasks.",
                 parameters: {
                   type: "object",
                   properties: {
@@ -197,17 +197,17 @@ export const coachReply = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     try {
-      const traits = data.traits?.length ? data.traits.join(", ") : "general ADHD";
+      const traits = data.traits?.length ? data.traits.join(", ") : "not specified";
       const toneMod =
         data.tone === "direct"
           ? "Lean direct and pragmatic."
           : data.tone === "tough"
             ? "Use warm tough-love: loving but firm, push them gently toward action."
             : "Lean gentle and soothing.";
-      const sys = `You are an expert ADHD coach and emotional support companion. The user has ADHD with these traits: ${traits}. Your role:
-1. Help them process emotional dysregulation, especially RSD (Rejection Sensitive Dysphoria).
+      const sys = `You are a warm, perceptive focus coach and emotional support companion. The user has described their cognitive style as: ${traits}. Use this to personalize your responses, but never label or diagnose. Your role:
+1. Help them process difficult emotions, intense reactions, and mental overwhelm.
 2. Offer CBT and DBT-based reframing when appropriate.
-3. Help break spirals of shame, overwhelm, and task paralysis.
+3. Help break spirals of shame, overwhelm, and feeling stuck.
 4. Be warm, direct, never condescending.
 5. Keep responses concise (under 100 words unless they need more).
 6. Never use hollow affirmations like "That's valid!" — be genuinely human.
@@ -290,7 +290,7 @@ export const journalInsights = createServerFn({ method: "POST" })
         {
           role: "system",
           content:
-            "Analyze these ADHD symptom logs. Identify 2-3 actionable patterns (e.g. 'Your focus is consistently lower on days with under 6h sleep'). Be specific, warm, data-driven. Max 3 points, max 20 words each. Return only bullet points, one per line, each starting with '- '.",
+            "Analyze these daily self-reported logs. Identify 2-3 actionable patterns (e.g. 'Your focus is consistently lower on days with under 6h sleep'). Be specific, warm, data-driven. Max 3 points, max 20 words each. Return only bullet points, one per line, each starting with '- '.",
         },
         { role: "user", content: JSON.stringify(data.logs).slice(0, 4000) },
       ]);
@@ -366,7 +366,7 @@ export const analyzeThought = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const thought = data.thought;
     const userName = data.name || "the user";
-    const userTraits = data.traits?.length ? data.traits.join(", ") : "general ADHD";
+    const userTraits = data.traits?.length ? data.traits.join(", ") : "not specified";
 
     const cloudCall = callAI(
       [
@@ -419,7 +419,7 @@ export const analyzeThought = createServerFn({ method: "POST" })
 - tones: 2-4 emotional tones detected, lowercase, max 2 words each.
 - breakdown: 3-4 interpretation bullets — what the user is actually saying beneath the surface. Max 20 words each. Only include a 4th if genuinely distinct.
 - hiddenQuestion: The single most important unresolved question embedded in this thought, phrased exactly as the user might ask themselves at 2am. Max 15 words.
-User name: ${userName}. User ADHD traits: ${userTraits}.`,
+User name: ${userName}. The user's cognitive style: ${userTraits}.`,
         },
         { role: "user", content: thought },
       ],
