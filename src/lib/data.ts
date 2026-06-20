@@ -158,93 +158,41 @@ export function useAddFocusSession() {
   });
 }
 
-/* ---------------- Habits ---------------- */
-export type Habit = Tables<"habits">;
-export type HabitLog = Tables<"habit_logs">;
+/* ---------------- Chess games ---------------- */
+export type ChessGame = Tables<"chess_games">;
 
-export function useHabits() {
+export function useChessGames(limit = 20) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["habits", user?.id],
+    queryKey: ["chess_games", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("habits")
+        .from("chess_games")
         .select("*")
-        .order("order_index", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(limit);
       if (error) throw error;
-      return data as Habit[];
+      return data as ChessGame[];
     },
   });
 }
 
-export function useHabitLogs(date = todayStr()) {
+export function useAddChessGame() {
   const { user } = useAuth();
-  return useQuery({
-    queryKey: ["habit_logs", user?.id, date],
-    enabled: !!user?.id,
-    queryFn: async () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (g: Omit<TablesInsert<"chess_games">, "user_id">) => {
       const { data, error } = await supabase
-        .from("habit_logs")
+        .from("chess_games")
+        .insert({ ...g, user_id: user!.id })
         .select("*")
-        .eq("date", date);
+        .single();
       if (error) throw error;
-      return data as HabitLog[];
-    },
-  });
-}
-
-export function useReplaceHabits() {
-  const { user } = useAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (
-      habits: { name: string; duration_mins: number; mvp_fallback: string }[],
-    ) => {
-      await supabase.from("habits").delete().eq("user_id", user!.id);
-      if (habits.length) {
-        const rows = habits.map((h, i) => ({
-          ...h,
-          order_index: i,
-          user_id: user!.id,
-        }));
-        const { error } = await supabase.from("habits").insert(rows);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["habits", user?.id] }),
-  });
-}
-
-export function useToggleHabit() {
-  const { user } = useAuth();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      habitId,
-      complete,
-      badDay,
-      date = todayStr(),
-    }: {
-      habitId: string;
-      complete: boolean;
-      badDay?: boolean;
-      date?: string;
-    }) => {
-      const { error } = await supabase.from("habit_logs").upsert(
-        {
-          user_id: user!.id,
-          habit_id: habitId,
-          date,
-          is_complete: complete,
-          is_bad_day_mode: badDay ?? false,
-        },
-        { onConflict: "habit_id,date" },
-      );
-      if (error) throw error;
+      return data;
     },
     onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["habit_logs", user?.id] }),
+      qc.invalidateQueries({ queryKey: ["chess_games", user?.id] }),
   });
 }
 
