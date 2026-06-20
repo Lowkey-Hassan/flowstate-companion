@@ -5,7 +5,7 @@ import { LogOut, Check } from "lucide-react";
 import { PageTitle } from "@/components/PageTitle";
 import { useProfile, useUpdateProfile, traitsOf } from "@/lib/profile";
 import { useAuth } from "@/lib/auth";
-import { ADHD_TRAITS, ANCHOR_TIMES } from "@/lib/constants";
+import { MIND_TRAITS, ANCHOR_TIMES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -32,7 +32,7 @@ function SettingsPage() {
     const next = traits.includes(t)
       ? traits.filter((x) => x !== t)
       : [...traits, t];
-    update.mutate({ adhd_traits: next });
+    update.mutate({ mind_traits: next });
   };
 
   const saveName = () => {
@@ -64,9 +64,9 @@ function SettingsPage() {
         </div>
       </Block>
 
-      <Block label="ADHD traits">
+      <Block label="How your mind works">
         <div className="grid grid-cols-2 gap-2">
-          {ADHD_TRAITS.map((t) => {
+          {MIND_TRAITS.map((t) => {
             const on = traits.includes(t);
             return (
               <button
