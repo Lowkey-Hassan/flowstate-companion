@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      chess_games: {
+        Row: {
+          accuracy_percent: number
+          ai_report: string | null
+          base_skill_level: number
+          blunders: number
+          brilliant_moves: number
+          created_at: string
+          difficulty_label: string
+          duration_seconds: number
+          end_condition: string
+          good_moves: number
+          id: string
+          inaccuracies: number
+          max_skill_reached: number
+          min_skill_reached: number
+          mistakes: number
+          pgn: string | null
+          result: string
+          time_control_minutes: number
+          total_moves: number
+          user_id: string
+        }
+        Insert: {
+          accuracy_percent?: number
+          ai_report?: string | null
+          base_skill_level?: number
+          blunders?: number
+          brilliant_moves?: number
+          created_at?: string
+          difficulty_label: string
+          duration_seconds?: number
+          end_condition: string
+          good_moves?: number
+          id?: string
+          inaccuracies?: number
+          max_skill_reached?: number
+          min_skill_reached?: number
+          mistakes?: number
+          pgn?: string | null
+          result: string
+          time_control_minutes?: number
+          total_moves?: number
+          user_id: string
+        }
+        Update: {
+          accuracy_percent?: number
+          ai_report?: string | null
+          base_skill_level?: number
+          blunders?: number
+          brilliant_moves?: number
+          created_at?: string
+          difficulty_label?: string
+          duration_seconds?: number
+          end_condition?: string
+          good_moves?: number
+          id?: string
+          inaccuracies?: number
+          max_skill_reached?: number
+          min_skill_reached?: number
+          mistakes?: number
+          pgn?: string | null
+          result?: string
+          time_control_minutes?: number
+          total_moves?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       coach_feedback: {
         Row: {
           created_at: string
@@ -344,13 +413,13 @@ export type Database = {
       }
       user_profile: {
         Row: {
-          adhd_traits: Json
           anchor_time: string | null
           coach_tone: string
           created_at: string
           focus_mode_preference: string
           id: string
           last_active_date: string | null
+          mind_traits: Json
           name: string | null
           notifications_enabled: boolean
           onboarding_complete: boolean
@@ -360,13 +429,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          adhd_traits?: Json
           anchor_time?: string | null
           coach_tone?: string
           created_at?: string
           focus_mode_preference?: string
           id?: string
           last_active_date?: string | null
+          mind_traits?: Json
           name?: string | null
           notifications_enabled?: boolean
           onboarding_complete?: boolean
@@ -376,13 +445,13 @@ export type Database = {
           user_id: string
         }
         Update: {
-          adhd_traits?: Json
           anchor_time?: string | null
           coach_tone?: string
           created_at?: string
           focus_mode_preference?: string
           id?: string
           last_active_date?: string | null
+          mind_traits?: Json
           name?: string | null
           notifications_enabled?: boolean
           onboarding_complete?: boolean

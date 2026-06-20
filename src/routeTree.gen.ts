@@ -16,7 +16,6 @@ import { Route as AppThoughtbookRouteImport } from './routes/_app.thoughtbook'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppJournalRouteImport } from './routes/_app.journal'
-import { Route as AppHabitsRouteImport } from './routes/_app.habits'
 import { Route as AppFocusRouteImport } from './routes/_app.focus'
 import { Route as AppCoachRouteImport } from './routes/_app.coach'
 
@@ -54,11 +53,6 @@ const AppJournalRoute = AppJournalRouteImport.update({
   path: '/journal',
   getParentRoute: () => AppRoute,
 } as any)
-const AppHabitsRoute = AppHabitsRouteImport.update({
-  id: '/habits',
-  path: '/habits',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppFocusRoute = AppFocusRouteImport.update({
   id: '/focus',
   path: '/focus',
@@ -75,7 +69,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/coach': typeof AppCoachRoute
   '/focus': typeof AppFocusRoute
-  '/habits': typeof AppHabitsRoute
   '/journal': typeof AppJournalRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
@@ -85,7 +78,6 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/coach': typeof AppCoachRoute
   '/focus': typeof AppFocusRoute
-  '/habits': typeof AppHabitsRoute
   '/journal': typeof AppJournalRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
@@ -98,7 +90,6 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/coach': typeof AppCoachRoute
   '/_app/focus': typeof AppFocusRoute
-  '/_app/habits': typeof AppHabitsRoute
   '/_app/journal': typeof AppJournalRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tasks': typeof AppTasksRoute
@@ -112,7 +103,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/coach'
     | '/focus'
-    | '/habits'
     | '/journal'
     | '/settings'
     | '/tasks'
@@ -122,7 +112,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/coach'
     | '/focus'
-    | '/habits'
     | '/journal'
     | '/settings'
     | '/tasks'
@@ -134,7 +123,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/_app/coach'
     | '/_app/focus'
-    | '/_app/habits'
     | '/_app/journal'
     | '/_app/settings'
     | '/_app/tasks'
@@ -198,13 +186,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJournalRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/habits': {
-      id: '/_app/habits'
-      path: '/habits'
-      fullPath: '/habits'
-      preLoaderRoute: typeof AppHabitsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/focus': {
       id: '/_app/focus'
       path: '/focus'
@@ -225,7 +206,6 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppCoachRoute: typeof AppCoachRoute
   AppFocusRoute: typeof AppFocusRoute
-  AppHabitsRoute: typeof AppHabitsRoute
   AppJournalRoute: typeof AppJournalRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTasksRoute: typeof AppTasksRoute
@@ -236,7 +216,6 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppCoachRoute: AppCoachRoute,
   AppFocusRoute: AppFocusRoute,
-  AppHabitsRoute: AppHabitsRoute,
   AppJournalRoute: AppJournalRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTasksRoute: AppTasksRoute,
@@ -253,13 +232,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -10,7 +10,7 @@ export const Route = createFileRoute("/login")({
       { title: "Sign in — FlowState" },
       {
         name: "description",
-        content: "Your private, AI-powered ADHD companion.",
+        content: "Your private, AI-powered focus and clarity companion.",
       },
     ],
   }),

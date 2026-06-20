@@ -61,8 +61,8 @@ export function useUpdateProfile() {
 }
 
 export function traitsOf(profile?: Profile | null): string[] {
-  if (!profile?.adhd_traits) return [];
-  const raw = profile.adhd_traits;
+  if (!profile?.mind_traits) return [];
+  const raw = profile.mind_traits;
   if (Array.isArray(raw)) return raw.map((t) => String(t));
   return [];
 }

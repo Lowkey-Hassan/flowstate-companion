@@ -3,12 +3,12 @@ import { useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Zap, Flame, CheckSquare, Repeat, ArrowRight } from "lucide-react";
+import { Flame, CheckSquare, ArrowRight, Puzzle, BookOpen } from "lucide-react";
 import { useProfile, useUpdateProfile, traitsOf } from "@/lib/profile";
 import {
   useTasks,
-  useHabits,
-  useHabitLogs,
+  useChessGames,
+  useDailyLogs,
   todayStr,
 } from "@/lib/data";
 import { useOnline } from "@/hooks/use-online";
@@ -24,19 +24,32 @@ function Home() {
   const profile = useProfile();
   const updateProfile = useUpdateProfile();
   const tasks = useTasks();
-  const habits = useHabits();
-  const logs = useHabitLogs();
+  const chess = useChessGames();
+  const logs = useDailyLogs();
   const online = useOnline();
   const greetingFn = useServerFn(getGreeting);
 
   const name = profile.data?.name;
   const part = partOfDay();
+  const today = todayStr();
 
-  // Streak maintenance — once per day.
+  // --- Daily contributors (1% progress ring) ---
+  const chessToday = (chess.data ?? []).some(
+    (g) => g.created_at.slice(0, 10) === today && g.duration_seconds >= 300,
+  );
+  const tasksToday = (tasks.data ?? []).some(
+    (t) => t.is_complete && (t.completed_at ?? "").slice(0, 10) === today,
+  );
+  const journalToday = (logs.data ?? []).some((l) => l.date === today);
+
+  const progress =
+    (chessToday ? 34 : 0) + (tasksToday ? 33 : 0) + (journalToday ? 33 : 0);
+  const activeToday = chessToday || tasksToday || journalToday;
+
+  // Streak maintenance — only counts a day with real activity.
   useEffect(() => {
     const p = profile.data;
-    if (!p) return;
-    const today = todayStr();
+    if (!p || !activeToday) return;
     if (p.last_active_date === today) return;
     const yesterday = new Date(Date.now() - 86400000)
       .toISOString()
@@ -45,7 +58,7 @@ function Home() {
       p.last_active_date === yesterday ? (p.streak_count || 0) + 1 : 1;
     updateProfile.mutate({ last_active_date: today, streak_count: next });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile.data?.id]);
+  }, [profile.data?.id, activeToday]);
 
   const greeting = useQuery({
     queryKey: ["greeting", part, profile.data?.id],
@@ -60,9 +73,6 @@ function Home() {
   });
 
   const openTasks = (tasks.data ?? []).filter((t) => !t.is_complete).length;
-  const habitCount = habits.data?.length ?? 0;
-  const habitsDone =
-    logs.data?.filter((l) => l.is_complete).length ?? 0;
 
   return (
     <div>
@@ -87,26 +97,32 @@ function Home() {
         </p>
       </motion.div>
 
-      {/* Streak */}
+      {/* Streak + 1% ring */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.05 }}
-        className="card-surface mb-4 flex items-center gap-4 p-5"
+        className="card-surface mb-4 flex items-center gap-5 p-5"
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-2">
-          <Flame className="h-5 w-5 text-gold" />
-        </div>
-        <div>
-          <div className="font-display text-2xl text-foreground">
-            {profile.data?.streak_count ?? 0}
-            <span className="ml-1.5 text-sm font-sans text-muted-foreground">
+        <ProgressRing value={progress} />
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <Flame className="h-4 w-4 text-gold" />
+            <span className="font-display text-2xl text-foreground">
+              {profile.data?.streak_count ?? 0}
+            </span>
+            <span className="text-sm text-muted-foreground">
               day{(profile.data?.streak_count ?? 0) === 1 ? "" : "s"} showing up
             </span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Not perfect. Present. That's the whole game.
+          <p className="mt-1 text-xs text-muted-foreground">
+            Today's 1%: {progress}% complete. Not perfect — present.
           </p>
+          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
+            <Contributor on={chessToday} label="Chess" />
+            <Contributor on={tasksToday} label="Tasks" />
+            <Contributor on={journalToday} label="Journal" />
+          </div>
         </div>
       </motion.div>
 
@@ -122,14 +138,14 @@ function Home() {
         >
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/10">
-              <Zap className="h-5 w-5 text-gold" />
+              <Puzzle className="h-5 w-5 text-gold" />
             </div>
             <div>
               <div className="text-sm font-semibold text-foreground">
-                Start a focus session
+                Play a chess game
               </div>
               <div className="text-xs text-muted-foreground">
-                One block. That's all you need to decide right now.
+                Every move is a decision. Sit down and think clearly.
               </div>
             </div>
           </div>
@@ -147,10 +163,10 @@ function Home() {
           delay={0.15}
         />
         <SnapshotCard
-          to="/habits"
-          icon={<Repeat className="h-4 w-4 text-gold" />}
-          value={`${habitsDone}/${habitCount}`}
-          label="rituals today"
+          to="/journal"
+          icon={<BookOpen className="h-4 w-4 text-gold" />}
+          value={journalToday ? "Done" : "—"}
+          label="check-in today"
           delay={0.2}
         />
       </div>
@@ -167,7 +183,7 @@ function Home() {
         >
           <div>
             <div className="text-sm font-medium text-foreground">
-              How's your brain today?
+              How's your mind today?
             </div>
             <div className="text-xs text-muted-foreground">
               A 20-second check-in. No streak to protect — just notice.
@@ -177,6 +193,55 @@ function Home() {
         </Link>
       </motion.div>
     </div>
+  );
+}
+
+function ProgressRing({ value }: { value: number }) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
+      <svg className="h-full w-full -rotate-90" viewBox="0 0 64 64">
+        <circle
+          cx="32"
+          cy="32"
+          r={r}
+          fill="none"
+          stroke="var(--border-accent)"
+          strokeWidth="4"
+        />
+        <motion.circle
+          cx="32"
+          cy="32"
+          r={r}
+          fill="none"
+          stroke="var(--gold)"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          animate={{ strokeDashoffset: c * (1 - value / 100) }}
+          transition={{ duration: 0.6 }}
+        />
+      </svg>
+      <span className="absolute font-mono text-xs text-foreground">
+        {value}%
+      </span>
+    </div>
+  );
+}
+
+function Contributor({ on, label }: { on: boolean; label: string }) {
+  return (
+    <span
+      className={
+        on
+          ? "rounded-full border border-gold/50 bg-surface-2 px-2 py-0.5 text-gold"
+          : "rounded-full border border-border px-2 py-0.5 text-muted-foreground"
+      }
+    >
+      {on ? "✓ " : ""}
+      {label}
+    </span>
   );
 }
 

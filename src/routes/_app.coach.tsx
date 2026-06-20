@@ -76,7 +76,7 @@ function CoachPage() {
       <PageTitle
         eyebrow="Coach"
         title="Talk it through."
-        subtitle="A coach who gets the ADHD brain — the shame spirals, the RSD, the frozen days. No hollow affirmations."
+        subtitle="Private. Non-judgmental. Always here. No hollow affirmations — just a coach who listens and helps you think clearly."
       />
 
       <div

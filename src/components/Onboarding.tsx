@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
-import { ADHD_TRAITS, ANCHOR_TIMES } from "@/lib/constants";
+import { MIND_TRAITS, ANCHOR_TIMES } from "@/lib/constants";
 import { useUpdateProfile } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ export function Onboarding() {
   const finish = () => {
     update.mutate({
       name: name.trim() || null,
-      adhd_traits: traits,
+      mind_traits: traits,
       anchor_time: anchor,
       coach_tone: tone,
       onboarding_complete: true,
@@ -59,15 +59,14 @@ export function Onboarding() {
     <div key="traits" className="space-y-6">
       <div>
         <h2 className="font-display text-3xl tracking-tight text-foreground">
-          Which of these feel familiar?
+          How does your mind usually work?
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Pick whatever resonates. I'll tune everything — coaching, tasks,
-          routines — around how your brain actually works.
+          Pick everything that resonates. No wrong answers.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2.5">
-        {ADHD_TRAITS.map((t) => {
+        {MIND_TRAITS.map((t) => {
           const on = traits.includes(t);
           return (
             <button
