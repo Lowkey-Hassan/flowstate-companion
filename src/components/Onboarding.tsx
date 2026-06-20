@@ -59,15 +59,14 @@ export function Onboarding() {
     <div key="traits" className="space-y-6">
       <div>
         <h2 className="font-display text-3xl tracking-tight text-foreground">
-          Which of these feel familiar?
+          How does your mind usually work?
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Pick whatever resonates. I'll tune everything — coaching, tasks,
-          routines — around how your brain actually works.
+          Pick everything that resonates. No wrong answers.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2.5">
-        {ADHD_TRAITS.map((t) => {
+        {MIND_TRAITS.map((t) => {
           const on = traits.includes(t);
           return (
             <button
