@@ -148,11 +148,11 @@ npm run dev
 
 ## Roadmap
 
-- [ ] Mobile-native build
-- [ ] Shareable ThoughtBook chapters (opt-in, private link)
-- [ ] Expanded focus game library
-- [ ] Calendar integration for task scheduling
-- [ ] Export journal patterns as a PDF report
+- Mobile-native build
+- Shareable ThoughtBook chapters (opt-in, private link)
+- Expanded focus game library
+- Calendar integration for task scheduling
+- Export journal patterns as a PDF report
 
 ---
 
@@ -161,5 +161,3 @@ npm run dev
 This project is currently private and not licensed for redistribution.
 
 ---
-
-Built by Aarjith — Computer Science (AI & Data Science), Easwari Engineering College.
